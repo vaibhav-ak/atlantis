@@ -17,4 +17,7 @@ jobs:
           days-before-stale: 31
           # 1 month
           days-before-close: 31
-          only-labels: 'waiting-on-response'
+          # don't stale issues/prs attached to milestones
+          exempt-all-milestones: true
+          # don't stale issues/prs assigned to people
+          exempt-all-assignees: true
