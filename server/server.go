@@ -746,7 +746,6 @@ func NewServer(userConfig UserConfig, config Config) (*Server, error) {
 		deleteLockCommand,
 		vcsClient,
 		userConfig.SilenceNoProjects,
-		userConfig.DisableUnlockLabel,
 	)
 
 	versionCommandRunner := events.NewVersionCommandRunner(
@@ -813,7 +812,6 @@ func NewServer(userConfig UserConfig, config Config) (*Server, error) {
 		PullStatusFetcher:              backend,
 		TeamAllowlistChecker:           githubTeamAllowlistChecker,
 		VarFileAllowlistChecker:        varFileAllowlistChecker,
-		CommitStatusUpdater:            commitStatusUpdater,
 	}
 	repoAllowlist, err := events.NewRepoAllowlistChecker(userConfig.RepoAllowlist)
 	if err != nil {

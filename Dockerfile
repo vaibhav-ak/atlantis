@@ -1,14 +1,14 @@
 # syntax=docker/dockerfile:1
 # what distro is the image being built for
 ARG ALPINE_TAG=3.18.4
-ARG DEBIAN_TAG=12.2-slim
+ARG DEBIAN_TAG=12.1-slim
 
-ARG DEFAULT_TERRAFORM_VERSION=1.6.3
+ARG DEFAULT_TERRAFORM_VERSION=1.5.7
 ARG DEFAULT_CONFTEST_VERSION=0.46.0
 
 # Stage 1: build artifact and download deps
 
-FROM golang:1.21.3-alpine AS builder
+FROM golang:1.21.2-alpine AS builder
 
 ARG ATLANTIS_VERSION=dev
 ENV ATLANTIS_VERSION=${ATLANTIS_VERSION}
@@ -135,7 +135,7 @@ ENV DEFAULT_TERRAFORM_VERSION=${DEFAULT_TERRAFORM_VERSION}
 
 # In the official Atlantis image, we only have the latest of each Terraform version.
 # Each binary is about 80 MB so we limit it to the 4 latest minor releases or fewer
-RUN AVAILABLE_TERRAFORM_VERSIONS="1.3.10 1.4.6 1.5.7 ${DEFAULT_TERRAFORM_VERSION}" && \
+RUN AVAILABLE_TERRAFORM_VERSIONS="1.2.9 1.3.10 1.4.6 ${DEFAULT_TERRAFORM_VERSION}" && \
     case "${TARGETPLATFORM}" in \
         "linux/amd64") TERRAFORM_ARCH=amd64 ;; \
         "linux/arm64") TERRAFORM_ARCH=arm64 ;; \
@@ -182,7 +182,7 @@ COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 # We place this last as it will bust less docker layer caches when packages update
 RUN apk add --no-cache \
         ca-certificates~=20230506 \
-        curl~=8.4 \
+        curl~=8.3 \
         git~=2.40 \
         unzip~=6.0 \
         bash~=5.2 \

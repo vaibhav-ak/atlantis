@@ -146,7 +146,6 @@ func TestGitlabClient_GetModifiedFiles(t *testing.T) {
 				Version:         nil,
 				PollingInterval: time.Second * 0,
 				PollingTimeout:  time.Second * 10,
-				logger:          logging.NewNoopLogger(t),
 			}
 
 			filenames, err := client.GetModifiedFiles(
@@ -226,7 +225,6 @@ func TestGitlabClient_MergePull(t *testing.T) {
 			client := &GitlabClient{
 				Client:  internalClient,
 				Version: nil,
-				logger:  logging.NewNoopLogger(t),
 			}
 
 			err = client.MergePull(models.PullRequest{
@@ -299,7 +297,6 @@ func TestGitlabClient_UpdateStatus(t *testing.T) {
 			client := &GitlabClient{
 				Client:  internalClient,
 				Version: nil,
-				logger:  logging.NewNoopLogger(t),
 			}
 
 			repo := models.Repo{
@@ -454,7 +451,6 @@ func TestGitlabClient_PullIsMergeable(t *testing.T) {
 				client := &GitlabClient{
 					Client:  internalClient,
 					Version: nil,
-					logger:  logging.NewNoopLogger(t),
 				}
 
 				repo := models.Repo{
@@ -627,7 +623,6 @@ func TestGithubClient_GetPullLabels(t *testing.T) {
 	client := &GitlabClient{
 		Client:  internalClient,
 		Version: nil,
-		logger:  logging.NewNoopLogger(t),
 	}
 
 	labels, err := client.GetPullLabels(models.Repo{
@@ -657,7 +652,6 @@ func TestGithubClient_GetPullLabels_EmptyResponse(t *testing.T) {
 	client := &GitlabClient{
 		Client:  internalClient,
 		Version: nil,
-		logger:  logging.NewNoopLogger(t),
 	}
 
 	labels, err := client.GetPullLabels(models.Repo{
