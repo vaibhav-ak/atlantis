@@ -12,7 +12,7 @@ require (
 	github.com/go-playground/validator/v10 v10.16.0
 	github.com/go-test/deep v1.1.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/google/go-github/v54 v54.0.0
+	github.com/google/go-github/v56 v56.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/google/uuid v1.4.0
 	github.com/gorilla/mux v1.8.1
@@ -45,7 +45,7 @@ require (
 	github.com/xanzy/go-gitlab v0.93.2
 	go.etcd.io/bbolt v1.3.8
 	go.uber.org/zap v1.26.0
-	golang.org/x/term v0.13.0
+	golang.org/x/term v0.14.0
 	golang.org/x/text v0.13.0
 	gopkg.in/yaml.v2 v2.4.0
 )
@@ -63,6 +63,8 @@ require (
 )
 
 require github.com/twmb/murmur3 v1.1.8 // indirect
+
+require github.com/google/go-github/v54 v54.0.0
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -84,7 +86,6 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/google/go-github/v56 v56.0.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -128,7 +129,7 @@ require (
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/oauth2 v0.12.0 // indirect
-	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/sys v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
