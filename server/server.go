@@ -746,7 +746,6 @@ func NewServer(userConfig UserConfig, config Config) (*Server, error) {
 		deleteLockCommand,
 		vcsClient,
 		userConfig.SilenceNoProjects,
-		userConfig.DisableUnlockLabel,
 	)
 
 	versionCommandRunner := events.NewVersionCommandRunner(
