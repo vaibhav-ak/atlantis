@@ -13,7 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-github/v58/github"
+	"github.com/google/go-github/v57/github"
 	"github.com/hashicorp/go-version"
 	. "github.com/petergtz/pegomock/v4"
 
@@ -1295,7 +1295,6 @@ func setupE2E(t *testing.T, repoDir string, opt setupOption) (events_controllers
 		allowCommands = opt.allowCommands
 	}
 	disableApply := true
-	disableGlobalApplyLock := false
 	for _, allowCommand := range allowCommands {
 		if allowCommand == command.Apply {
 			disableApply = false
@@ -1315,7 +1314,7 @@ func setupE2E(t *testing.T, repoDir string, opt setupOption) (events_controllers
 	backend := boltdb
 	lockingClient := locking.NewClient(boltdb)
 	noOpLocker := locking.NewNoOpLocker()
-	applyLocker = locking.NewApplyClient(boltdb, disableApply, disableGlobalApplyLock)
+	applyLocker = locking.NewApplyClient(boltdb, disableApply)
 	projectLocker := &events.DefaultProjectLocker{
 		Locker:     lockingClient,
 		NoOpLocker: noOpLocker,
@@ -1343,6 +1342,8 @@ func setupE2E(t *testing.T, repoDir string, opt setupOption) (events_controllers
 	globalCfgArgs := valid.GlobalCfgArgs{
 		RepoConfigFile:       opt.repoConfigFile,
 		AllowAllRepoSettings: true,
+		MergeableReq:         false,
+		ApprovedReq:          false,
 		PreWorkflowHooks:     preWorkflowHooks,
 		PostWorkflowHooks: []*valid.WorkflowHook{
 			{
