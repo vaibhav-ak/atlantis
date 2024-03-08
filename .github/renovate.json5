@@ -12,7 +12,7 @@
   postUpdateOptions: [
     "gomodTidy",
     "gomodUpdateImportPaths",
-    "pnpmDedupe",
+    "yarnDedupeHighest",
   ],
   // needed so e2e tests do not stomp over each other
   prHourlyLimit: 1,

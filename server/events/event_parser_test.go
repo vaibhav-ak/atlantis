@@ -21,14 +21,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-github/v59/github"
+	"github.com/google/go-github/v57/github"
 	"github.com/mcdafydd/go-azuredevops/azuredevops"
 	"github.com/mohae/deepcopy"
 	"github.com/runatlantis/atlantis/server/events"
 	"github.com/runatlantis/atlantis/server/events/command"
 	"github.com/runatlantis/atlantis/server/events/models"
 	. "github.com/runatlantis/atlantis/server/events/vcs/testdata"
-	"github.com/runatlantis/atlantis/server/logging"
 	. "github.com/runatlantis/atlantis/testing"
 	gitlab "github.com/xanzy/go-gitlab"
 )
@@ -63,7 +62,6 @@ func TestParseGithubRepo(t *testing.T) {
 }
 
 func TestParseGithubIssueCommentEvent(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	comment := github.IssueCommentEvent{
 		Repo: &Repo,
 		Issue: &github.Issue{
@@ -78,26 +76,26 @@ func TestParseGithubIssueCommentEvent(t *testing.T) {
 
 	testComment := deepcopy.Copy(comment).(github.IssueCommentEvent)
 	testComment.Comment = nil
-	_, _, _, err := parser.ParseGithubIssueCommentEvent(logger, &testComment)
+	_, _, _, err := parser.ParseGithubIssueCommentEvent(&testComment)
 	ErrEquals(t, "comment.user.login is null", err)
 
 	testComment = deepcopy.Copy(comment).(github.IssueCommentEvent)
 	testComment.Comment.User = nil
-	_, _, _, err = parser.ParseGithubIssueCommentEvent(logger, &testComment)
+	_, _, _, err = parser.ParseGithubIssueCommentEvent(&testComment)
 	ErrEquals(t, "comment.user.login is null", err)
 
 	testComment = deepcopy.Copy(comment).(github.IssueCommentEvent)
 	testComment.Comment.User.Login = nil
-	_, _, _, err = parser.ParseGithubIssueCommentEvent(logger, &testComment)
+	_, _, _, err = parser.ParseGithubIssueCommentEvent(&testComment)
 	ErrEquals(t, "comment.user.login is null", err)
 
 	testComment = deepcopy.Copy(comment).(github.IssueCommentEvent)
 	testComment.Issue = nil
-	_, _, _, err = parser.ParseGithubIssueCommentEvent(logger, &testComment)
+	_, _, _, err = parser.ParseGithubIssueCommentEvent(&testComment)
 	ErrEquals(t, "issue.number is null", err)
 
 	// this should be successful
-	repo, user, pullNum, err := parser.ParseGithubIssueCommentEvent(logger, &comment)
+	repo, user, pullNum, err := parser.ParseGithubIssueCommentEvent(&comment)
 	Ok(t, err)
 	Equals(t, models.Repo{
 		Owner:             *comment.Repo.Owner.Login,
@@ -117,26 +115,25 @@ func TestParseGithubIssueCommentEvent(t *testing.T) {
 }
 
 func TestParseGithubPullEvent(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
-	_, _, _, _, _, err := parser.ParseGithubPullEvent(logger, &github.PullRequestEvent{})
+	_, _, _, _, _, err := parser.ParseGithubPullEvent(&github.PullRequestEvent{})
 	ErrEquals(t, "pull_request is null", err)
 
 	testEvent := deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 	testEvent.PullRequest.HTMLURL = nil
-	_, _, _, _, _, err = parser.ParseGithubPullEvent(logger, &testEvent)
+	_, _, _, _, _, err = parser.ParseGithubPullEvent(&testEvent)
 	ErrEquals(t, "html_url is null", err)
 
 	testEvent = deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 	testEvent.Sender = nil
-	_, _, _, _, _, err = parser.ParseGithubPullEvent(logger, &testEvent)
+	_, _, _, _, _, err = parser.ParseGithubPullEvent(&testEvent)
 	ErrEquals(t, "sender is null", err)
 
 	testEvent = deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 	testEvent.Sender.Login = nil
-	_, _, _, _, _, err = parser.ParseGithubPullEvent(logger, &testEvent)
+	_, _, _, _, _, err = parser.ParseGithubPullEvent(&testEvent)
 	ErrEquals(t, "sender.login is null", err)
 
-	actPull, evType, actBaseRepo, actHeadRepo, actUser, err := parser.ParseGithubPullEvent(logger, &PullEvent)
+	actPull, evType, actBaseRepo, actHeadRepo, actUser, err := parser.ParseGithubPullEvent(&PullEvent)
 	Ok(t, err)
 	expBaseRepo := models.Repo{
 		Owner:             "owner",
@@ -166,32 +163,30 @@ func TestParseGithubPullEvent(t *testing.T) {
 }
 
 func TestParseGithubPullEventFromDraft(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	// verify that close event treated as 'close' events by default
 	closeEvent := deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 	closeEvent.Action = github.String("closed")
 	closeEvent.PullRequest.Draft = github.Bool(true)
 
-	_, evType, _, _, _, err := parser.ParseGithubPullEvent(logger, &closeEvent)
+	_, evType, _, _, _, err := parser.ParseGithubPullEvent(&closeEvent)
 	Ok(t, err)
 	Equals(t, models.ClosedPullEvent, evType)
 
 	// verify that draft PRs are treated as 'other' events by default
 	testEvent := deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 	testEvent.PullRequest.Draft = github.Bool(true)
-	_, evType, _, _, _, err = parser.ParseGithubPullEvent(logger, &testEvent)
+	_, evType, _, _, _, err = parser.ParseGithubPullEvent(&testEvent)
 	Ok(t, err)
 	Equals(t, models.OtherPullEvent, evType)
 	// verify that drafts are planned if requested
 	parser.AllowDraftPRs = true
 	defer func() { parser.AllowDraftPRs = false }()
-	_, evType, _, _, _, err = parser.ParseGithubPullEvent(logger, &testEvent)
+	_, evType, _, _, _, err = parser.ParseGithubPullEvent(&testEvent)
 	Ok(t, err)
 	Equals(t, models.OpenedPullEvent, evType)
 }
 
 func TestParseGithubPullEvent_EventType(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	cases := []struct {
 		action   string
 		exp      models.PullRequestEventType
@@ -260,19 +255,19 @@ func TestParseGithubPullEvent_EventType(t *testing.T) {
 			event := deepcopy.Copy(PullEvent).(github.PullRequestEvent)
 			action := c.action
 			event.Action = &action
-			_, actType, _, _, _, err := parser.ParseGithubPullEvent(logger, &event)
+			_, actType, _, _, _, err := parser.ParseGithubPullEvent(&event)
 			Ok(t, err)
 			Equals(t, c.exp, actType)
 			// Test draft parsing when draft PRs disabled
 			draftPR := true
 			event.PullRequest.Draft = &draftPR
-			_, draftEvType, _, _, _, err := parser.ParseGithubPullEvent(logger, &event)
+			_, draftEvType, _, _, _, err := parser.ParseGithubPullEvent(&event)
 			Ok(t, err)
 			Equals(t, c.draftExp, draftEvType)
 			// Test draft parsing when draft PRs are enabled.
 			draftParser := parser
 			draftParser.AllowDraftPRs = true
-			_, draftEvType, _, _, _, err = draftParser.ParseGithubPullEvent(logger, &event)
+			_, draftEvType, _, _, _, err = draftParser.ParseGithubPullEvent(&event)
 			Ok(t, err)
 			Equals(t, c.exp, draftEvType)
 		})
@@ -280,38 +275,37 @@ func TestParseGithubPullEvent_EventType(t *testing.T) {
 }
 
 func TestParseGithubPull(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	testPull := deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.Head.SHA = nil
-	_, _, _, err := parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err := parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "head.sha is null", err)
 
 	testPull = deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.HTMLURL = nil
-	_, _, _, err = parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err = parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "html_url is null", err)
 
 	testPull = deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.Head.Ref = nil
-	_, _, _, err = parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err = parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "head.ref is null", err)
 
 	testPull = deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.Base.Ref = nil
-	_, _, _, err = parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err = parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "base.ref is null", err)
 
 	testPull = deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.User.Login = nil
-	_, _, _, err = parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err = parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "user.login is null", err)
 
 	testPull = deepcopy.Copy(Pull).(github.PullRequest)
 	testPull.Number = nil
-	_, _, _, err = parser.ParseGithubPull(logger, &testPull)
+	_, _, _, err = parser.ParseGithubPull(&testPull)
 	ErrEquals(t, "number is null", err)
 
-	pullRes, actBaseRepo, actHeadRepo, err := parser.ParseGithubPull(logger, &Pull)
+	pullRes, actBaseRepo, actHeadRepo, err := parser.ParseGithubPull(&Pull)
 	Ok(t, err)
 	expBaseRepo := models.Repo{
 		Owner:             "owner",

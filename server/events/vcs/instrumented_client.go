@@ -1,9 +1,10 @@
 package vcs
 
 import (
+	"fmt"
 	"strconv"
 
-	"github.com/google/go-github/v59/github"
+	"github.com/google/go-github/v57/github"
 	"github.com/runatlantis/atlantis/server/events/models"
 	"github.com/runatlantis/atlantis/server/logging"
 	"github.com/runatlantis/atlantis/server/metrics"
@@ -31,7 +32,7 @@ func NewInstrumentedGithubClient(client *GithubClient, statsScope tally.Scope, l
 //go:generate pegomock generate --package mocks -o mocks/mock_github_pull_request_getter.go GithubPullRequestGetter
 
 type GithubPullRequestGetter interface {
-	GetPullRequest(logger logging.SimpleLogging, repo models.Repo, pullNum int) (*github.PullRequest, error)
+	GetPullRequest(repo models.Repo, pullNum int) (*github.PullRequest, error)
 }
 
 // IGithubClient exists to bridge the gap between GithubPullRequestGetter and Client interface to allow
@@ -50,9 +51,13 @@ type InstrumentedGithubClient struct {
 	Logger            logging.SimpleLogging
 }
 
-func (c *InstrumentedGithubClient) GetPullRequest(logger logging.SimpleLogging, repo models.Repo, pullNum int) (*github.PullRequest, error) {
+func (c *InstrumentedGithubClient) GetPullRequest(repo models.Repo, pullNum int) (*github.PullRequest, error) {
 	scope := c.StatsScope.SubScope("get_pull_request")
 	scope = SetGitScopeTags(scope, repo.FullName, pullNum)
+	logger := c.Logger.WithHistory([]interface{}{
+		"repository", fmt.Sprintf("%s/%s", repo.Owner, repo.Name),
+		"pull-num", strconv.Itoa(pullNum),
+	}...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -60,7 +65,7 @@ func (c *InstrumentedGithubClient) GetPullRequest(logger logging.SimpleLogging, 
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	pull, err := c.PullRequestGetter.GetPullRequest(logger, repo, pullNum)
+	pull, err := c.PullRequestGetter.GetPullRequest(repo, pullNum)
 
 	if err != nil {
 		executionError.Inc(1)
@@ -79,9 +84,10 @@ type InstrumentedClient struct {
 	Logger     logging.SimpleLogging
 }
 
-func (c *InstrumentedClient) GetModifiedFiles(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest) ([]string, error) {
+func (c *InstrumentedClient) GetModifiedFiles(repo models.Repo, pull models.PullRequest) ([]string, error) {
 	scope := c.StatsScope.SubScope("get_modified_files")
 	scope = SetGitScopeTags(scope, repo.FullName, pull.Num)
+	logger := c.Logger.WithHistory(fmtLogSrc(repo, pull.Num)...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -89,7 +95,7 @@ func (c *InstrumentedClient) GetModifiedFiles(logger logging.SimpleLogging, repo
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	files, err := c.Client.GetModifiedFiles(logger, repo, pull)
+	files, err := c.Client.GetModifiedFiles(repo, pull)
 
 	if err != nil {
 		executionError.Inc(1)
@@ -101,9 +107,10 @@ func (c *InstrumentedClient) GetModifiedFiles(logger logging.SimpleLogging, repo
 	return files, err
 }
 
-func (c *InstrumentedClient) CreateComment(logger logging.SimpleLogging, repo models.Repo, pullNum int, comment string, command string) error {
+func (c *InstrumentedClient) CreateComment(repo models.Repo, pullNum int, comment string, command string) error {
 	scope := c.StatsScope.SubScope("create_comment")
 	scope = SetGitScopeTags(scope, repo.FullName, pullNum)
+	logger := c.Logger.WithHistory(fmtLogSrc(repo, pullNum)...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -111,7 +118,7 @@ func (c *InstrumentedClient) CreateComment(logger logging.SimpleLogging, repo mo
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	if err := c.Client.CreateComment(logger, repo, pullNum, comment, command); err != nil {
+	if err := c.Client.CreateComment(repo, pullNum, comment, command); err != nil {
 		executionError.Inc(1)
 		logger.Err("Unable to create comment for command %s, error: %s", command, err.Error())
 		return err
@@ -121,7 +128,7 @@ func (c *InstrumentedClient) CreateComment(logger logging.SimpleLogging, repo mo
 	return nil
 }
 
-func (c *InstrumentedClient) ReactToComment(logger logging.SimpleLogging, repo models.Repo, pullNum int, commentID int64, reaction string) error {
+func (c *InstrumentedClient) ReactToComment(repo models.Repo, pullNum int, commentID int64, reaction string) error {
 	scope := c.StatsScope.SubScope("react_to_comment")
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
@@ -130,9 +137,9 @@ func (c *InstrumentedClient) ReactToComment(logger logging.SimpleLogging, repo m
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	if err := c.Client.ReactToComment(logger, repo, pullNum, commentID, reaction); err != nil {
+	if err := c.Client.ReactToComment(repo, pullNum, commentID, reaction); err != nil {
 		executionError.Inc(1)
-		logger.Err("Unable to react to comment, error: %s", err.Error())
+		c.Logger.Err("Unable to react to comment, error: %s", err.Error())
 		return err
 	}
 
@@ -140,9 +147,10 @@ func (c *InstrumentedClient) ReactToComment(logger logging.SimpleLogging, repo m
 	return nil
 }
 
-func (c *InstrumentedClient) HidePrevCommandComments(logger logging.SimpleLogging, repo models.Repo, pullNum int, command string, dir string) error {
+func (c *InstrumentedClient) HidePrevCommandComments(repo models.Repo, pullNum int, command string, dir string) error {
 	scope := c.StatsScope.SubScope("hide_prev_plan_comments")
 	scope = SetGitScopeTags(scope, repo.FullName, pullNum)
+	logger := c.Logger.WithHistory(fmtLogSrc(repo, pullNum)...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -150,7 +158,7 @@ func (c *InstrumentedClient) HidePrevCommandComments(logger logging.SimpleLoggin
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	if err := c.Client.HidePrevCommandComments(logger, repo, pullNum, command, dir); err != nil {
+	if err := c.Client.HidePrevCommandComments(repo, pullNum, command, dir); err != nil {
 		executionError.Inc(1)
 		logger.Err("Unable to hide previous %s comments, error: %s", command, err.Error())
 		return err
@@ -161,9 +169,10 @@ func (c *InstrumentedClient) HidePrevCommandComments(logger logging.SimpleLoggin
 
 }
 
-func (c *InstrumentedClient) PullIsApproved(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest) (models.ApprovalStatus, error) {
+func (c *InstrumentedClient) PullIsApproved(repo models.Repo, pull models.PullRequest) (models.ApprovalStatus, error) {
 	scope := c.StatsScope.SubScope("pull_is_approved")
 	scope = SetGitScopeTags(scope, repo.FullName, pull.Num)
+	logger := c.Logger.WithHistory(fmtLogSrc(repo, pull.Num)...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -171,7 +180,7 @@ func (c *InstrumentedClient) PullIsApproved(logger logging.SimpleLogging, repo m
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	approved, err := c.Client.PullIsApproved(logger, repo, pull)
+	approved, err := c.Client.PullIsApproved(repo, pull)
 
 	if err != nil {
 		executionError.Inc(1)
@@ -183,9 +192,10 @@ func (c *InstrumentedClient) PullIsApproved(logger logging.SimpleLogging, repo m
 	return approved, err
 }
 
-func (c *InstrumentedClient) PullIsMergeable(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, vcsstatusname string) (bool, error) {
+func (c *InstrumentedClient) PullIsMergeable(repo models.Repo, pull models.PullRequest, vcsstatusname string) (bool, error) {
 	scope := c.StatsScope.SubScope("pull_is_mergeable")
 	scope = SetGitScopeTags(scope, repo.FullName, pull.Num)
+	logger := c.Logger.WithHistory(fmtLogSrc(repo, pull.Num)...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -193,7 +203,7 @@ func (c *InstrumentedClient) PullIsMergeable(logger logging.SimpleLogging, repo 
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	mergeable, err := c.Client.PullIsMergeable(logger, repo, pull, vcsstatusname)
+	mergeable, err := c.Client.PullIsMergeable(repo, pull, vcsstatusname)
 
 	if err != nil {
 		executionError.Inc(1)
@@ -205,9 +215,17 @@ func (c *InstrumentedClient) PullIsMergeable(logger logging.SimpleLogging, repo 
 	return mergeable, err
 }
 
-func (c *InstrumentedClient) UpdateStatus(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, state models.CommitStatus, src string, description string, url string) error {
+func (c *InstrumentedClient) UpdateStatus(repo models.Repo, pull models.PullRequest, state models.CommitStatus, src string, description string, url string) error {
 	scope := c.StatsScope.SubScope("update_status")
 	scope = SetGitScopeTags(scope, repo.FullName, pull.Num)
+	logger := c.Logger.WithHistory([]interface{}{
+		"repository", fmt.Sprintf("%s/%s", repo.Owner, repo.Name),
+		"pull-num", strconv.Itoa(pull.Num),
+		"src", src,
+		"description", description,
+		"state", state,
+		"url", url,
+	}...)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -216,7 +234,7 @@ func (c *InstrumentedClient) UpdateStatus(logger logging.SimpleLogging, repo mod
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
 	logger.Info("updating vcs status")
-	if err := c.Client.UpdateStatus(logger, repo, pull, state, src, description, url); err != nil {
+	if err := c.Client.UpdateStatus(repo, pull, state, src, description, url); err != nil {
 		executionError.Inc(1)
 		logger.Err("Unable to update status at url: %s, error: %s", url, err.Error())
 		return err
@@ -226,9 +244,10 @@ func (c *InstrumentedClient) UpdateStatus(logger logging.SimpleLogging, repo mod
 	return nil
 }
 
-func (c *InstrumentedClient) MergePull(logger logging.SimpleLogging, pull models.PullRequest, pullOptions models.PullRequestOptions) error {
+func (c *InstrumentedClient) MergePull(pull models.PullRequest, pullOptions models.PullRequestOptions) error {
 	scope := c.StatsScope.SubScope("merge_pull")
 	scope = SetGitScopeTags(scope, pull.BaseRepo.FullName, pull.Num)
+	logger := c.Logger.WithHistory("pull-num", pull.Num)
 
 	executionTime := scope.Timer(metrics.ExecutionTimeMetric).Start()
 	defer executionTime.Stop()
@@ -236,7 +255,7 @@ func (c *InstrumentedClient) MergePull(logger logging.SimpleLogging, pull models
 	executionSuccess := scope.Counter(metrics.ExecutionSuccessMetric)
 	executionError := scope.Counter(metrics.ExecutionErrorMetric)
 
-	if err := c.Client.MergePull(logger, pull, pullOptions); err != nil {
+	if err := c.Client.MergePull(pull, pullOptions); err != nil {
 		executionError.Inc(1)
 		logger.Err("Unable to merge pull, error: %s", err.Error())
 		return err
@@ -244,6 +263,14 @@ func (c *InstrumentedClient) MergePull(logger logging.SimpleLogging, pull models
 
 	executionSuccess.Inc(1)
 	return nil
+}
+
+// taken from other parts of the code, would be great to have this in a shared spot
+func fmtLogSrc(repo models.Repo, pullNum int) []interface{} {
+	return []interface{}{
+		"repository", repo.FullName,
+		"pull-num", strconv.Itoa(pullNum),
+	}
 }
 
 func SetGitScopeTags(scope tally.Scope, repoFullName string, pullNum int) tally.Scope {
