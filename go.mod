@@ -1,6 +1,6 @@
 module github.com/runatlantis/atlantis
 
-go 1.21
+go 1.22.0
 
 require (
 	github.com/Masterminds/sprig/v3 v3.2.3
@@ -12,9 +12,9 @@ require (
 	github.com/go-playground/validator/v10 v10.17.0
 	github.com/go-test/deep v1.1.0
 	github.com/golang-jwt/jwt/v5 v5.2.0
-	github.com/google/go-github/v58 v58.0.0
+	github.com/google/go-github/v57 v57.0.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
-	github.com/google/uuid v1.6.0
+	github.com/google/uuid v1.5.0
 	github.com/gorilla/mux v1.8.1
 	github.com/gorilla/websocket v1.5.1
 	github.com/hashicorp/go-getter/v2 v2.2.1
@@ -31,10 +31,10 @@ require (
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/petergtz/pegomock/v4 v4.0.0
 	github.com/pkg/errors v0.9.1
-	github.com/redis/go-redis/v9 v9.4.0
+	github.com/redis/go-redis/v9 v9.3.1
 	github.com/remeh/sizedwaitgroup v1.0.0
 	github.com/shurcooL/githubv4 v0.0.0-20240120211514-18a1ae0e79dc
-	github.com/slack-go/slack v0.12.3
+	github.com/slack-go/slack v0.12.5
 	github.com/spf13/cobra v1.8.0
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.18.2
@@ -45,9 +45,9 @@ require (
 	github.com/xanzy/go-gitlab v0.96.0
 	go.etcd.io/bbolt v1.3.8
 	go.uber.org/zap v1.26.0
-	golang.org/x/term v0.16.0
+	golang.org/x/term v0.15.0
 	golang.org/x/text v0.14.0
-	gopkg.in/yaml.v3 v3.0.1
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
@@ -63,8 +63,6 @@ require (
 )
 
 require github.com/twmb/murmur3 v1.1.8 // indirect
-
-require github.com/google/go-github/v57 v57.0.0 // indirect
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
@@ -123,13 +121,14 @@ require (
 	github.com/yuin/gopher-lua v1.1.0 // indirect
 	github.com/zclconf/go-cty v1.13.2 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/crypto v0.16.0 // indirect
 	golang.org/x/exp v0.0.0-20230905200255-921286631fa9 // indirect
 	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
-	golang.org/x/sys v0.16.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 	golang.org/x/time v0.5.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

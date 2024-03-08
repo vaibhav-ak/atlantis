@@ -6,6 +6,7 @@ import (
 	"github.com/runatlantis/atlantis/server/core/config/raw"
 	"github.com/runatlantis/atlantis/server/core/config/valid"
 	. "github.com/runatlantis/atlantis/testing"
+	yaml "gopkg.in/yaml.v2"
 )
 
 func TestAutoDiscover_UnmarshalYAML(t *testing.T) {
@@ -36,7 +37,7 @@ mode: enabled
 	for _, c := range cases {
 		t.Run(c.description, func(t *testing.T) {
 			var a raw.AutoDiscover
-			err := unmarshalString(c.input, &a)
+			err := yaml.UnmarshalStrict([]byte(c.input), &a)
 			Ok(t, err)
 			Equals(t, c.exp, a)
 		})
