@@ -45,10 +45,9 @@ type LockIndexData struct {
 
 // ApplyLockData holds the fields to display in the index view
 type ApplyLockData struct {
-	Locked                 bool
-	GlobalApplyLockEnabled bool
-	Time                   time.Time
-	TimeFormatted          string
+	Locked        bool
+	Time          time.Time
+	TimeFormatted string
 }
 
 // IndexData holds the data for rendering the index page
@@ -99,7 +98,6 @@ var IndexTemplate = template.Must(template.New("index.html.tmpl").Parse(`
     <p class="js-discard-success"><strong>Plan discarded and unlocked!</strong></p>
   </section>
   <section>
-    {{ if .ApplyLock.GlobalApplyLockEnabled }}
     {{ if .ApplyLock.Locked }}
     <div class="twelve center columns">
       <h6><strong>Apply commands are disabled globally</strong></h6>
@@ -112,7 +110,6 @@ var IndexTemplate = template.Must(template.New("index.html.tmpl").Parse(`
       <h6><strong>Apply commands are enabled</strong></h6>
       <a class="button button-primary" id="applyLockPrompt">Disable Apply Commands</a>
     </div>
-    {{ end }}
     {{ end }}
   </section>
   <br>
@@ -441,7 +438,7 @@ var ProjectJobsTemplate = template.Must(template.New("blank.html.tmpl").Parse(`
     <title>atlantis</title>
     <meta name="description" content>
     <meta name="author" content>
-    <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/xterm-5.3.0.css">
+    <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/xterm.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/normalize.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/skeleton.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/custom.css">
@@ -487,17 +484,17 @@ var ProjectJobsTemplate = template.Must(template.New("blank.html.tmpl").Parse(`
   </footer>
 
     <script src="{{ .CleanedBasePath }}/static/js/jquery-3.5.1.min.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-5.3.0.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-attach-0.9.0.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-fit-0.8.0.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-search-0.13.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-4.9.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-attach-0.6.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-fit-0.4.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-search-0.7.0.js"></script>
     <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-search-bar.js"></script>
 
     <script>
       function updateTerminalStatus(msg) {
           document.getElementsByTagName("footer")[0].innerText = msg;
       }
-      var term = new Terminal({scrollback: 15000, smoothScrollDuration:125 });
+      var term = new Terminal({scrollback: 15000});
       var socket = new WebSocket(
         (document.location.protocol === "http:" ? "ws://" : "wss://") +
         document.location.host +
@@ -545,7 +542,7 @@ var ProjectJobsErrorTemplate = template.Must(template.New("blank.html.tmpl").Par
     <title>atlantis</title>
     <meta name="description" content>
     <meta name="author" content>
-    <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/xterm-5.3.0.css">
+    <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/xterm.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/normalize.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/skeleton.css">
     <link rel="stylesheet" href="{{ .CleanedBasePath }}/static/css/custom.css">
@@ -575,9 +572,9 @@ var ProjectJobsErrorTemplate = template.Must(template.New("blank.html.tmpl").Par
     </footer>
 
     <script src="{{ .CleanedBasePath }}/static/js/jquery-3.5.1.min.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-5.3.0.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-attach-0.9.0.js"></script>
-    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-fit-0.8.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-4.9.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-attach-0.6.0.js"></script>
+    <script src="{{ .CleanedBasePath }}/static/js/xterm-addon-fit-0.4.0.js"></script>
 
     <script>
       var term = new Terminal();

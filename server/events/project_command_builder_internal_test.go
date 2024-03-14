@@ -632,14 +632,17 @@ projects:
 			workingDir := NewMockWorkingDir()
 			When(workingDir.Clone(Any[models.Repo](), Any[models.PullRequest](), Any[string]())).ThenReturn(tmp, false, nil)
 			vcsClient := vcsmocks.NewMockClient()
-			When(vcsClient.GetModifiedFiles(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
+			When(vcsClient.GetModifiedFiles(Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
 
 			// Write and parse the global config file.
 			globalCfgPath := filepath.Join(tmp, "global.yaml")
 			Ok(t, os.WriteFile(globalCfgPath, []byte(c.globalCfg), 0600))
 			parser := &config.ParserValidator{}
-			globalCfgArgs := valid.GlobalCfgArgs{}
+			globalCfgArgs := valid.GlobalCfgArgs{
+				MergeableReq:  false,
+				ApprovedReq:   false,
+				UnDivergedReq: false,
+			}
 			globalCfg, err := parser.ParseGlobalCfg(globalCfgPath, valid.NewGlobalCfgFromArgs(globalCfgArgs))
 			Ok(t, err)
 
@@ -847,14 +850,17 @@ projects:
 			workingDir := NewMockWorkingDir()
 			When(workingDir.Clone(Any[models.Repo](), Any[models.PullRequest](), Any[string]())).ThenReturn(tmp, false, nil)
 			vcsClient := vcsmocks.NewMockClient()
-			When(vcsClient.GetModifiedFiles(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
+			When(vcsClient.GetModifiedFiles(Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
 
 			// Write and parse the global config file.
 			globalCfgPath := filepath.Join(tmp, "global.yaml")
 			Ok(t, os.WriteFile(globalCfgPath, []byte(c.globalCfg), 0600))
 			parser := &config.ParserValidator{}
-			globalCfgArgs := valid.GlobalCfgArgs{}
+			globalCfgArgs := valid.GlobalCfgArgs{
+				MergeableReq:  false,
+				ApprovedReq:   false,
+				UnDivergedReq: false,
+			}
 			globalCfg, err := parser.ParseGlobalCfg(globalCfgPath, valid.NewGlobalCfgFromArgs(globalCfgArgs))
 			Ok(t, err)
 
@@ -1093,14 +1099,16 @@ workflows:
 			workingDir := NewMockWorkingDir()
 			When(workingDir.Clone(Any[models.Repo](), Any[models.PullRequest](), Any[string]())).ThenReturn(tmp, false, nil)
 			vcsClient := vcsmocks.NewMockClient()
-			When(vcsClient.GetModifiedFiles(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
+			When(vcsClient.GetModifiedFiles(Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
 
 			// Write and parse the global config file.
 			globalCfgPath := filepath.Join(tmp, "global.yaml")
 			Ok(t, os.WriteFile(globalCfgPath, []byte(c.globalCfg), 0600))
 			parser := &config.ParserValidator{}
 			globalCfgArgs := valid.GlobalCfgArgs{
+				MergeableReq:       false,
+				ApprovedReq:        false,
+				UnDivergedReq:      false,
 				PolicyCheckEnabled: true,
 			}
 
@@ -1248,14 +1256,17 @@ projects:
 			workingDir := NewMockWorkingDir()
 			When(workingDir.Clone(Any[models.Repo](), Any[models.PullRequest](), Any[string]())).ThenReturn(tmp, false, nil)
 			vcsClient := vcsmocks.NewMockClient()
-			When(vcsClient.GetModifiedFiles(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
+			When(vcsClient.GetModifiedFiles(Any[models.Repo](), Any[models.PullRequest]())).ThenReturn([]string{"modules/module/main.tf"}, nil)
 
 			// Write and parse the global config file.
 			globalCfgPath := filepath.Join(tmp, "global.yaml")
 			Ok(t, os.WriteFile(globalCfgPath, []byte(globalCfg), 0600))
 			parser := &config.ParserValidator{}
-			globalCfgArgs := valid.GlobalCfgArgs{}
+			globalCfgArgs := valid.GlobalCfgArgs{
+				MergeableReq:  false,
+				ApprovedReq:   false,
+				UnDivergedReq: false,
+			}
 
 			globalCfg, err := parser.ParseGlobalCfg(globalCfgPath, valid.NewGlobalCfgFromArgs(globalCfgArgs))
 			Ok(t, err)
@@ -1388,8 +1399,7 @@ projects:
 			workingDir := NewMockWorkingDir()
 			When(workingDir.Clone(Any[models.Repo](), Any[models.PullRequest](), Any[string]())).ThenReturn(tmp, false, nil)
 			vcsClient := vcsmocks.NewMockClient()
-			When(vcsClient.GetModifiedFiles(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[models.PullRequest]())).ThenReturn(c.modifiedFiles, nil)
+			When(vcsClient.GetModifiedFiles(Any[models.Repo](), Any[models.PullRequest]())).ThenReturn(c.modifiedFiles, nil)
 
 			// Write and parse the global config file.
 			globalCfgPath := filepath.Join(tmp, "global.yaml")
@@ -1397,6 +1407,9 @@ projects:
 			parser := &config.ParserValidator{}
 			globalCfgArgs := valid.GlobalCfgArgs{
 				AllowAllRepoSettings: false,
+				MergeableReq:         false,
+				ApprovedReq:          false,
+				UnDivergedReq:        false,
 			}
 
 			globalCfg, err := parser.ParseGlobalCfg(globalCfgPath, valid.NewGlobalCfgFromArgs(globalCfgArgs))

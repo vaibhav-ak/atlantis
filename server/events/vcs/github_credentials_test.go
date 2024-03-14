@@ -10,7 +10,6 @@ import (
 )
 
 func TestGithubClient_GetUser_AppSlug(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	defer disableSSLVerification()()
 	testServer, err := testdata.GithubAppTestServer(t)
 	Ok(t, err)
@@ -18,7 +17,7 @@ func TestGithubClient_GetUser_AppSlug(t *testing.T) {
 	anonCreds := &vcs.GithubAnonymousCredentials{}
 	anonClient, err := vcs.NewGithubClient(testServer, anonCreds, vcs.GithubConfig{}, logging.NewNoopLogger(t))
 	Ok(t, err)
-	tempSecrets, err := anonClient.ExchangeCode(logger, "good-code")
+	tempSecrets, err := anonClient.ExchangeCode("good-code")
 	Ok(t, err)
 
 	appCreds := &vcs.GithubAppCredentials{
@@ -35,7 +34,6 @@ func TestGithubClient_GetUser_AppSlug(t *testing.T) {
 }
 
 func TestGithubClient_AppAuthentication(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	defer disableSSLVerification()()
 	testServer, err := testdata.GithubAppTestServer(t)
 	Ok(t, err)
@@ -43,7 +41,7 @@ func TestGithubClient_AppAuthentication(t *testing.T) {
 	anonCreds := &vcs.GithubAnonymousCredentials{}
 	anonClient, err := vcs.NewGithubClient(testServer, anonCreds, vcs.GithubConfig{}, logging.NewNoopLogger(t))
 	Ok(t, err)
-	tempSecrets, err := anonClient.ExchangeCode(logger, "good-code")
+	tempSecrets, err := anonClient.ExchangeCode("good-code")
 	Ok(t, err)
 
 	appCreds := &vcs.GithubAppCredentials{

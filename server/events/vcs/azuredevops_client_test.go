@@ -15,12 +15,10 @@ import (
 	"github.com/runatlantis/atlantis/server/events/models"
 	"github.com/runatlantis/atlantis/server/events/vcs"
 	"github.com/runatlantis/atlantis/server/events/vcs/testdata"
-	"github.com/runatlantis/atlantis/server/logging"
 	. "github.com/runatlantis/atlantis/testing"
 )
 
 func TestAzureDevopsClient_MergePull(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	cases := []struct {
 		description string
 		response    string
@@ -123,18 +121,16 @@ func TestAzureDevopsClient_MergePull(t *testing.T) {
 			}
 			fmt.Printf("Successfully merged pull request: %+v\n", merge)
 
-			err = client.MergePull(
-				logger,
-				models.PullRequest{
-					Num: 22,
-					BaseRepo: models.Repo{
-						FullName: "owner/project/repo",
-						Owner:    "owner",
-						Name:     "repo",
-					},
-				}, models.PullRequestOptions{
-					DeleteSourceBranchOnMerge: false,
-				})
+			err = client.MergePull(models.PullRequest{
+				Num: 22,
+				BaseRepo: models.Repo{
+					FullName: "owner/project/repo",
+					Owner:    "owner",
+					Name:     "repo",
+				},
+			}, models.PullRequestOptions{
+				DeleteSourceBranchOnMerge: false,
+			})
 			if c.expErr == "" {
 				Ok(t, err)
 			} else {
@@ -146,7 +142,6 @@ func TestAzureDevopsClient_MergePull(t *testing.T) {
 }
 
 func TestAzureDevopsClient_UpdateStatus(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	cases := []struct {
 		status             models.CommitStatus
 		expState           string
@@ -228,14 +223,11 @@ func TestAzureDevopsClient_UpdateStatus(t *testing.T) {
 				Owner:    "owner",
 				Name:     "repo",
 			}
-			err = client.UpdateStatus(
-				logger,
-				repo,
-				models.PullRequest{
-					Num:        22,
-					BaseRepo:   repo,
-					HeadCommit: "sha",
-				}, c.status, "src", "description", "https://google.com")
+			err = client.UpdateStatus(repo, models.PullRequest{
+				Num:        22,
+				BaseRepo:   repo,
+				HeadCommit: "sha",
+			}, c.status, "src", "description", "https://google.com")
 			Ok(t, err)
 			Assert(t, gotRequest, "expected to get the request")
 		})
@@ -245,7 +237,6 @@ func TestAzureDevopsClient_UpdateStatus(t *testing.T) {
 // GetModifiedFiles should make multiple requests if more than one page
 // and concat results.
 func TestAzureDevopsClient_GetModifiedFiles(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	itemRespTemplate := `{
 		"changes": [
 	{
@@ -290,27 +281,24 @@ func TestAzureDevopsClient_GetModifiedFiles(t *testing.T) {
 	Ok(t, err)
 	defer disableSSLVerification()()
 
-	files, err := client.GetModifiedFiles(
-		logger,
-		models.Repo{
-			FullName:          "owner/project/repo",
-			Owner:             "owner",
-			Name:              "repo",
-			CloneURL:          "",
-			SanitizedCloneURL: "",
-			VCSHost: models.VCSHost{
-				Type:     models.AzureDevops,
-				Hostname: "dev.azure.com",
-			},
-		}, models.PullRequest{
-			Num: 1,
-		})
+	files, err := client.GetModifiedFiles(models.Repo{
+		FullName:          "owner/project/repo",
+		Owner:             "owner",
+		Name:              "repo",
+		CloneURL:          "",
+		SanitizedCloneURL: "",
+		VCSHost: models.VCSHost{
+			Type:     models.AzureDevops,
+			Hostname: "dev.azure.com",
+		},
+	}, models.PullRequest{
+		Num: 1,
+	})
 	Ok(t, err)
 	Equals(t, []string{"file1.txt", "file2.txt"}, files)
 }
 
 func TestAzureDevopsClient_PullIsMergeable(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	type Policy struct {
 		genre  string
 		name   string
@@ -414,21 +402,19 @@ func TestAzureDevopsClient_PullIsMergeable(t *testing.T) {
 
 			defer disableSSLVerification()()
 
-			actMergeable, err := client.PullIsMergeable(
-				logger,
-				models.Repo{
-					FullName:          "owner/project/repo",
-					Owner:             "owner",
-					Name:              "repo",
-					CloneURL:          "",
-					SanitizedCloneURL: "",
-					VCSHost: models.VCSHost{
-						Type:     models.AzureDevops,
-						Hostname: "dev.azure.com",
-					},
-				}, models.PullRequest{
-					Num: 1,
-				}, "atlantis-test")
+			actMergeable, err := client.PullIsMergeable(models.Repo{
+				FullName:          "owner/project/repo",
+				Owner:             "owner",
+				Name:              "repo",
+				CloneURL:          "",
+				SanitizedCloneURL: "",
+				VCSHost: models.VCSHost{
+					Type:     models.AzureDevops,
+					Hostname: "dev.azure.com",
+				},
+			}, models.PullRequest{
+				Num: 1,
+			}, "atlantis-test")
 			Ok(t, err)
 			Equals(t, c.expMergeable, actMergeable)
 		})
@@ -436,7 +422,6 @@ func TestAzureDevopsClient_PullIsMergeable(t *testing.T) {
 }
 
 func TestAzureDevopsClient_PullIsApproved(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	cases := []struct {
 		testName           string
 		reviewerUniqueName string
@@ -511,21 +496,19 @@ func TestAzureDevopsClient_PullIsApproved(t *testing.T) {
 
 			defer disableSSLVerification()()
 
-			approvalStatus, err := client.PullIsApproved(
-				logger,
-				models.Repo{
-					FullName:          "owner/project/repo",
-					Owner:             "owner",
-					Name:              "repo",
-					CloneURL:          "",
-					SanitizedCloneURL: "",
-					VCSHost: models.VCSHost{
-						Type:     models.AzureDevops,
-						Hostname: "dev.azure.com",
-					},
-				}, models.PullRequest{
-					Num: 1,
-				})
+			approvalStatus, err := client.PullIsApproved(models.Repo{
+				FullName:          "owner/project/repo",
+				Owner:             "owner",
+				Name:              "repo",
+				CloneURL:          "",
+				SanitizedCloneURL: "",
+				VCSHost: models.VCSHost{
+					Type:     models.AzureDevops,
+					Hostname: "dev.azure.com",
+				},
+			}, models.PullRequest{
+				Num: 1,
+			})
 			Ok(t, err)
 			Equals(t, c.expApproved, approvalStatus.IsApproved)
 		})
@@ -533,7 +516,6 @@ func TestAzureDevopsClient_PullIsApproved(t *testing.T) {
 }
 
 func TestAzureDevopsClient_GetPullRequest(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	// Use a real Azure DevOps json response and edit the mergeable_state field.
 	jsBytes, err := os.ReadFile("testdata/azuredevops-pr.json")
 	Ok(t, err)
@@ -558,19 +540,17 @@ func TestAzureDevopsClient_GetPullRequest(t *testing.T) {
 		Ok(t, err)
 		defer disableSSLVerification()()
 
-		_, err = client.GetPullRequest(
-			logger,
-			models.Repo{
-				FullName:          "owner/project/repo",
-				Owner:             "owner",
-				Name:              "repo",
-				CloneURL:          "",
-				SanitizedCloneURL: "",
-				VCSHost: models.VCSHost{
-					Type:     models.AzureDevops,
-					Hostname: "dev.azure.com",
-				},
-			}, 1)
+		_, err = client.GetPullRequest(models.Repo{
+			FullName:          "owner/project/repo",
+			Owner:             "owner",
+			Name:              "repo",
+			CloneURL:          "",
+			SanitizedCloneURL: "",
+			VCSHost: models.VCSHost{
+				Type:     models.AzureDevops,
+				Hostname: "dev.azure.com",
+			},
+		}, 1)
 		Ok(t, err)
 	})
 }

@@ -20,25 +20,24 @@ import (
 	"github.com/runatlantis/atlantis/server/events/command"
 	"github.com/runatlantis/atlantis/server/events/models"
 	"github.com/runatlantis/atlantis/server/events/vcs"
-	"github.com/runatlantis/atlantis/server/logging"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 )
 
-//go:generate pegomock generate github.com/runatlantis/atlantis/server/events --package mocks -o mocks/mock_commit_status_updater.go CommitStatusUpdater
+//go:generate pegomock generate --package mocks -o mocks/mock_commit_status_updater.go CommitStatusUpdater
 
 // CommitStatusUpdater updates the status of a commit with the VCS host. We set
 // the status to signify whether the plan/apply succeeds.
 type CommitStatusUpdater interface {
 	// UpdateCombined updates the combined status of the head commit of pull.
 	// A combined status represents all the projects modified in the pull.
-	UpdateCombined(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name) error
+	UpdateCombined(repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name) error
 	// UpdateCombinedCount updates the combined status to reflect the
 	// numSuccess out of numTotal.
-	UpdateCombinedCount(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name, numSuccess int, numTotal int) error
+	UpdateCombinedCount(repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name, numSuccess int, numTotal int) error
 
-	UpdatePreWorkflowHook(logger logging.SimpleLogging, pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error
-	UpdatePostWorkflowHook(logger logging.SimpleLogging, pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error
+	UpdatePreWorkflowHook(pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error
+	UpdatePostWorkflowHook(pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error
 }
 
 // DefaultCommitStatusUpdater implements CommitStatusUpdater.
@@ -52,7 +51,7 @@ type DefaultCommitStatusUpdater struct {
 // cause runtime.StatusUpdater is extracted for resolving circular dependency
 var _ runtime.StatusUpdater = (*DefaultCommitStatusUpdater)(nil)
 
-func (d *DefaultCommitStatusUpdater) UpdateCombined(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name) error {
+func (d *DefaultCommitStatusUpdater) UpdateCombined(repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name) error {
 	src := fmt.Sprintf("%s/%s", d.StatusName, cmdName.String())
 	var descripWords string
 	switch status {
@@ -63,10 +62,10 @@ func (d *DefaultCommitStatusUpdater) UpdateCombined(logger logging.SimpleLogging
 	case models.SuccessCommitStatus:
 		descripWords = genProjectStatusDescription(cmdName.String(), "succeeded.")
 	}
-	return d.Client.UpdateStatus(logger, repo, pull, status, src, descripWords, "")
+	return d.Client.UpdateStatus(repo, pull, status, src, descripWords, "")
 }
 
-func (d *DefaultCommitStatusUpdater) UpdateCombinedCount(logger logging.SimpleLogging, repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name, numSuccess int, numTotal int) error {
+func (d *DefaultCommitStatusUpdater) UpdateCombinedCount(repo models.Repo, pull models.PullRequest, status models.CommitStatus, cmdName command.Name, numSuccess int, numTotal int) error {
 	src := fmt.Sprintf("%s/%s", d.StatusName, cmdName.String())
 	cmdVerb := "unknown"
 
@@ -79,7 +78,7 @@ func (d *DefaultCommitStatusUpdater) UpdateCombinedCount(logger logging.SimpleLo
 		cmdVerb = "applied"
 	}
 
-	return d.Client.UpdateStatus(logger, repo, pull, status, src, fmt.Sprintf("%d/%d projects %s successfully.", numSuccess, numTotal, cmdVerb), "")
+	return d.Client.UpdateStatus(repo, pull, status, src, fmt.Sprintf("%d/%d projects %s successfully.", numSuccess, numTotal, cmdVerb), "")
 }
 
 func (d *DefaultCommitStatusUpdater) UpdateProject(ctx command.ProjectContext, cmdName command.Name, status models.CommitStatus, url string, result *command.ProjectResult) error {
@@ -101,22 +100,22 @@ func (d *DefaultCommitStatusUpdater) UpdateProject(ctx command.ProjectContext, c
 			descripWords = genProjectStatusDescription(cmdName.String(), "succeeded.")
 		}
 	}
-	return d.Client.UpdateStatus(ctx.Log, ctx.BaseRepo, ctx.Pull, status, src, descripWords, url)
+	return d.Client.UpdateStatus(ctx.BaseRepo, ctx.Pull, status, src, descripWords, url)
 }
 
 func genProjectStatusDescription(cmdName, description string) string {
 	return fmt.Sprintf("%s %s", cases.Title(language.English).String(cmdName), description)
 }
 
-func (d *DefaultCommitStatusUpdater) UpdatePreWorkflowHook(log logging.SimpleLogging, pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error {
-	return d.updateWorkflowHook(log, pull, status, hookDescription, runtimeDescription, "pre_workflow_hook", url)
+func (d *DefaultCommitStatusUpdater) UpdatePreWorkflowHook(pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error {
+	return d.updateWorkflowHook(pull, status, hookDescription, runtimeDescription, "pre_workflow_hook", url)
 }
 
-func (d *DefaultCommitStatusUpdater) UpdatePostWorkflowHook(log logging.SimpleLogging, pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error {
-	return d.updateWorkflowHook(log, pull, status, hookDescription, runtimeDescription, "post_workflow_hook", url)
+func (d *DefaultCommitStatusUpdater) UpdatePostWorkflowHook(pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, url string) error {
+	return d.updateWorkflowHook(pull, status, hookDescription, runtimeDescription, "post_workflow_hook", url)
 }
 
-func (d *DefaultCommitStatusUpdater) updateWorkflowHook(log logging.SimpleLogging, pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, workflowType string, url string) error {
+func (d *DefaultCommitStatusUpdater) updateWorkflowHook(pull models.PullRequest, status models.CommitStatus, hookDescription string, runtimeDescription string, workflowType string, url string) error {
 	src := fmt.Sprintf("%s/%s: %s", d.StatusName, workflowType, hookDescription)
 
 	var descripWords string
@@ -133,5 +132,5 @@ func (d *DefaultCommitStatusUpdater) updateWorkflowHook(log logging.SimpleLoggin
 		}
 	}
 
-	return d.Client.UpdateStatus(log, pull.BaseRepo, pull, status, src, descripWords, url)
+	return d.Client.UpdateStatus(pull.BaseRepo, pull, status, src, descripWords, url)
 }

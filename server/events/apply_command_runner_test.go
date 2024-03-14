@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/google/go-github/v58/github"
+	"github.com/google/go-github/v57/github"
 	. "github.com/petergtz/pegomock/v4"
 	"github.com/runatlantis/atlantis/server/core/db"
 	"github.com/runatlantis/atlantis/server/core/locking"
@@ -57,8 +57,8 @@ func TestApplyCommandRunner_IsLocked(t *testing.T) {
 				State: github.String("open"),
 			}
 			modelPull := models.PullRequest{BaseRepo: testdata.GithubRepo, State: models.OpenPullState, Num: testdata.Pull.Num}
-			When(githubGetter.GetPullRequest(logger, testdata.GithubRepo, testdata.Pull.Num)).ThenReturn(pull, nil)
-			When(eventParsing.ParseGithubPull(logger, pull)).ThenReturn(modelPull, modelPull.BaseRepo, testdata.GithubRepo, nil)
+			When(githubGetter.GetPullRequest(testdata.GithubRepo, testdata.Pull.Num)).ThenReturn(pull, nil)
+			When(eventParsing.ParseGithubPull(pull)).ThenReturn(modelPull, modelPull.BaseRepo, testdata.GithubRepo, nil)
 
 			ctx := &command.Context{
 				User:     testdata.User,
@@ -72,8 +72,7 @@ func TestApplyCommandRunner_IsLocked(t *testing.T) {
 			When(applyLockChecker.CheckApplyLock()).ThenReturn(locking.ApplyCommandLock{Locked: c.ApplyLocked}, c.ApplyLockError)
 			applyCommandRunner.Run(ctx, &events.CommentCommand{Name: command.Apply})
 
-			vcsClient.VerifyWasCalledOnce().CreateComment(
-				Any[logging.SimpleLogging](), Eq(testdata.GithubRepo), Eq(modelPull.Num), Eq(c.ExpComment), Eq("apply"))
+			vcsClient.VerifyWasCalledOnce().CreateComment(testdata.GithubRepo, modelPull.Num, c.ExpComment, "apply")
 		})
 	}
 }
@@ -192,11 +191,9 @@ func TestApplyCommandRunner_IsSilenced(t *testing.T) {
 				timesComment = 0
 			}
 
-			vcsClient.VerifyWasCalled(Times(timesComment)).CreateComment(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[int](), Any[string](), Any[string]())
+			vcsClient.VerifyWasCalled(Times(timesComment)).CreateComment(Any[models.Repo](), Any[int](), Any[string](), Any[string]())
 			if c.ExpVCSStatusSet {
 				commitUpdater.VerifyWasCalledOnce().UpdateCombinedCount(
-					Any[logging.SimpleLogging](),
 					Any[models.Repo](),
 					Any[models.PullRequest](),
 					Eq[models.CommitStatus](models.SuccessCommitStatus),
@@ -206,7 +203,6 @@ func TestApplyCommandRunner_IsSilenced(t *testing.T) {
 				)
 			} else {
 				commitUpdater.VerifyWasCalled(Never()).UpdateCombinedCount(
-					Any[logging.SimpleLogging](),
 					Any[models.Repo](),
 					Any[models.PullRequest](),
 					Any[models.CommitStatus](),
@@ -262,7 +258,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 			},
 			ExpComment: "Ran Apply for 2 projects:\n\n" +
 				"1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n\n### 1. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### " +
-				"2. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---\n### Apply Summary\n\n2 projects, 1 successful, 0 failed, 1 errored",
+				"2. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---",
 		},
 		{
 			Description: "When first apply fails, the second not will run",
@@ -347,7 +343,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 			},
 			ExpComment: "Ran Apply for 2 projects:\n\n" +
 				"1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n\n### 1. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### " +
-				"2. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---\n### Apply Summary\n\n2 projects, 1 successful, 0 failed, 1 errored",
+				"2. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---",
 		},
 		{
 			Description: "When one out of two fails, the following two will not run",
@@ -402,7 +398,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 				"1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n\n### 1. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### " +
 				"2. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### " +
 				"3. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---\n### " +
-				"4. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### Apply Summary\n\n4 projects, 3 successful, 0 failed, 1 errored",
+				"4. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---",
 		},
 		{
 			Description: "Don't block when parallel is not set",
@@ -434,7 +430,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 			},
 			ExpComment: "Ran Apply for 2 projects:\n\n" +
 				"1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n\n### 1. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---\n### " +
-				"2. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### Apply Summary\n\n2 projects, 1 successful, 0 failed, 1 errored",
+				"2. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---",
 		},
 		{
 			Description: "Don't block when abortOnExcecutionOrderFail is not set",
@@ -464,7 +460,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 			},
 			ExpComment: "Ran Apply for 2 projects:\n\n" +
 				"1. dir: `` workspace: ``\n1. dir: `` workspace: ``\n\n### 1. dir: `` workspace: ``\n**Apply Error**\n```\nshabang\n```\n\n---\n### " +
-				"2. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---\n### Apply Summary\n\n2 projects, 1 successful, 0 failed, 1 errored",
+				"2. dir: `` workspace: ``\n```diff\nGreat success!\n```\n\n---",
 		},
 	}
 
@@ -490,8 +486,8 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 				Trigger:  command.CommentTrigger,
 			}
 
-			When(githubGetter.GetPullRequest(logger, testdata.GithubRepo, testdata.Pull.Num)).ThenReturn(pull, nil)
-			When(eventParsing.ParseGithubPull(logger, pull)).ThenReturn(modelPull, modelPull.BaseRepo, testdata.GithubRepo, nil)
+			When(githubGetter.GetPullRequest(testdata.GithubRepo, testdata.Pull.Num)).ThenReturn(pull, nil)
+			When(eventParsing.ParseGithubPull(pull)).ThenReturn(modelPull, modelPull.BaseRepo, testdata.GithubRepo, nil)
 
 			When(projectCommandBuilder.BuildApplyCommands(ctx, cmd)).ThenReturn(c.ProjectContexts, nil)
 			for i := range c.ProjectContexts {
@@ -506,7 +502,7 @@ func TestApplyCommandRunner_ExecutionOrder(t *testing.T) {
 			}
 
 			vcsClient.VerifyWasCalledOnce().CreateComment(
-				Any[logging.SimpleLogging](), Eq(testdata.GithubRepo), Eq(modelPull.Num), Eq(c.ExpComment), Eq("apply"),
+				testdata.GithubRepo, modelPull.Num, c.ExpComment, "apply",
 			)
 		})
 	}

@@ -62,7 +62,7 @@ func (g *GithubAppController) ExchangeCode(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	app, err := client.ExchangeCode(g.Logger, code)
+	app, err := client.ExchangeCode(code)
 	if err != nil {
 		g.respond(w, logging.Error, http.StatusInternalServerError, "Failed to exchange code for github app: %s", err)
 		return

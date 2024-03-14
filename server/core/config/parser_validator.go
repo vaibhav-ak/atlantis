@@ -1,10 +1,8 @@
 package config
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,7 +12,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/runatlantis/atlantis/server/core/config/raw"
 	"github.com/runatlantis/atlantis/server/core/config/valid"
-	yaml "gopkg.in/yaml.v3"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // ParserValidator parses and validates server-side repo config files and
@@ -60,12 +58,7 @@ func (p *ParserValidator) ParseRepoCfg(absRepoDir string, globalCfg valid.Global
 
 func (p *ParserValidator) ParseRepoCfgData(repoCfgData []byte, globalCfg valid.GlobalCfg, repoID string, branch string) (valid.RepoCfg, error) {
 	var rawConfig raw.RepoCfg
-
-	decoder := yaml.NewDecoder(bytes.NewReader(repoCfgData))
-	decoder.KnownFields(true)
-
-	err := decoder.Decode(&rawConfig)
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err := yaml.UnmarshalStrict(repoCfgData, &rawConfig); err != nil {
 		return valid.RepoCfg{}, err
 	}
 
@@ -105,7 +98,7 @@ func (p *ParserValidator) ParseRepoCfgData(repoCfgData []byte, globalCfg valid.G
 		}
 	}
 
-	err = globalCfg.ValidateRepoCfg(validConfig, repoID)
+	err := globalCfg.ValidateRepoCfg(validConfig, repoID)
 	return validConfig, err
 }
 
@@ -122,12 +115,7 @@ func (p *ParserValidator) ParseGlobalCfg(configFile string, defaultCfg valid.Glo
 	}
 
 	var rawCfg raw.GlobalCfg
-
-	decoder := yaml.NewDecoder(bytes.NewReader(configData))
-	decoder.KnownFields(true)
-
-	err = decoder.Decode(&rawCfg)
-	if err != nil && !errors.Is(err, io.EOF) {
+	if err := yaml.UnmarshalStrict(configData, &rawCfg); err != nil {
 		return valid.GlobalCfg{}, err
 	}
 

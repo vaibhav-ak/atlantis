@@ -39,7 +39,6 @@ import (
 func TestCleanUpPullWorkspaceErr(t *testing.T) {
 	t.Log("when workspace.Delete returns an error, we return it")
 	RegisterMockTestingT(t)
-	logger := logging.NewNoopLogger(t)
 	w := mocks.NewMockWorkingDir()
 	tmp := t.TempDir()
 	db, err := db.New(tmp)
@@ -51,14 +50,13 @@ func TestCleanUpPullWorkspaceErr(t *testing.T) {
 	}
 	err = errors.New("err")
 	When(w.Delete(testdata.GithubRepo, testdata.Pull)).ThenReturn(err)
-	actualErr := pce.CleanUpPull(logger, testdata.GithubRepo, testdata.Pull)
+	actualErr := pce.CleanUpPull(testdata.GithubRepo, testdata.Pull)
 	Equals(t, "cleaning workspace: err", actualErr.Error())
 }
 
 func TestCleanUpPullUnlockErr(t *testing.T) {
 	t.Log("when locker.UnlockByPull returns an error, we return it")
 	RegisterMockTestingT(t)
-	logger := logging.NewNoopLogger(t)
 	w := mocks.NewMockWorkingDir()
 	l := lockmocks.NewMockLocker()
 	tmp := t.TempDir()
@@ -72,12 +70,11 @@ func TestCleanUpPullUnlockErr(t *testing.T) {
 	}
 	err = errors.New("err")
 	When(l.UnlockByPull(testdata.GithubRepo.FullName, testdata.Pull.Num)).ThenReturn(nil, err)
-	actualErr := pce.CleanUpPull(logger, testdata.GithubRepo, testdata.Pull)
+	actualErr := pce.CleanUpPull(testdata.GithubRepo, testdata.Pull)
 	Equals(t, "cleaning up locks: err", actualErr.Error())
 }
 
 func TestCleanUpPullNoLocks(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	t.Log("when there are no locks to clean up, we don't comment")
 	RegisterMockTestingT(t)
 	w := mocks.NewMockWorkingDir()
@@ -93,13 +90,12 @@ func TestCleanUpPullNoLocks(t *testing.T) {
 		Backend:    db,
 	}
 	When(l.UnlockByPull(testdata.GithubRepo.FullName, testdata.Pull.Num)).ThenReturn(nil, nil)
-	err = pce.CleanUpPull(logger, testdata.GithubRepo, testdata.Pull)
+	err = pce.CleanUpPull(testdata.GithubRepo, testdata.Pull)
 	Ok(t, err)
-	cp.VerifyWasCalled(Never()).CreateComment(Any[logging.SimpleLogging](), Any[models.Repo](), Any[int](), Any[string](), Any[string]())
+	cp.VerifyWasCalled(Never()).CreateComment(Any[models.Repo](), Any[int](), Any[string](), Any[string]())
 }
 
 func TestCleanUpPullComments(t *testing.T) {
-	logger := logging.NewNoopLogger(t)
 	t.Log("should comment correctly")
 	RegisterMockTestingT(t)
 	cases := []struct {
@@ -191,10 +187,9 @@ func TestCleanUpPullComments(t *testing.T) {
 			}
 			t.Log("testing: " + c.Description)
 			When(l.UnlockByPull(testdata.GithubRepo.FullName, testdata.Pull.Num)).ThenReturn(c.Locks, nil)
-			err = pce.CleanUpPull(logger, testdata.GithubRepo, testdata.Pull)
+			err = pce.CleanUpPull(testdata.GithubRepo, testdata.Pull)
 			Ok(t, err)
-			_, _, _, comment, _ := cp.VerifyWasCalledOnce().CreateComment(
-				Any[logging.SimpleLogging](), Any[models.Repo](), Any[int](), Any[string](), Any[string]()).GetCapturedArguments()
+			_, _, comment, _ := cp.VerifyWasCalledOnce().CreateComment(Any[models.Repo](), Any[int](), Any[string](), Any[string]()).GetCapturedArguments()
 
 			expected := "Locks and plans deleted for the projects and workspaces modified in this pull request:\n\n" + c.Exp
 			Equals(t, expected, comment)
@@ -283,12 +278,11 @@ func TestCleanUpLogStreaming(t *testing.T) {
 		When(locker.UnlockByPull(testdata.GithubRepo.FullName, testdata.Pull.Num)).ThenReturn(locks, nil)
 
 		// Clean up.
-		err = pullClosedExecutor.CleanUpPull(logger, testdata.GithubRepo, testdata.Pull)
+		err = pullClosedExecutor.CleanUpPull(testdata.GithubRepo, testdata.Pull)
 		Ok(t, err)
 
 		close(prjCmdOutput)
-		_, _, _, comment, _ := client.VerifyWasCalledOnce().CreateComment(
-			Any[logging.SimpleLogging](), Any[models.Repo](), Any[int](), Any[string](), Any[string]()).GetCapturedArguments()
+		_, _, comment, _ := client.VerifyWasCalledOnce().CreateComment(Any[models.Repo](), Any[int](), Any[string](), Any[string]()).GetCapturedArguments()
 		expectedComment := "Locks and plans deleted for the projects and workspaces modified in this pull request:\n\n" + "- dir: `.` workspace: `default`"
 		Equals(t, expectedComment, comment)
 
