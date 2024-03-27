@@ -6,6 +6,7 @@ import (
 
 	"github.com/runatlantis/atlantis/server/core/config/raw"
 	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v2"
 )
 
 func TestMetrics_Unmarshal(t *testing.T) {
@@ -21,7 +22,7 @@ prometheus:
 
 		var result raw.Metrics
 
-		err := unmarshalString(rawYaml, &result)
+		err := yaml.UnmarshalStrict([]byte(rawYaml), &result)
 		assert.NoError(t, err)
 	})
 

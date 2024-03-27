@@ -1,7 +1,0 @@
-{{ define "multiProjectApplyFooter" -}}
-{{ if (gt (len .Results) 1) -}}
-### Apply Summary
-
-{{ len .Results }} projects, {{ .NumApplySuccesses }} successful, {{ .NumApplyFailures }} failed, {{ .NumApplyErrors }} errored
-{{ end -}}
-{{ end -}}

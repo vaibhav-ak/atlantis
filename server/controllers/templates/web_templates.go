@@ -45,10 +45,9 @@ type LockIndexData struct {
 
 // ApplyLockData holds the fields to display in the index view
 type ApplyLockData struct {
-	Locked                 bool
-	GlobalApplyLockEnabled bool
-	Time                   time.Time
-	TimeFormatted          string
+	Locked        bool
+	Time          time.Time
+	TimeFormatted string
 }
 
 // IndexData holds the data for rendering the index page
@@ -99,7 +98,6 @@ var IndexTemplate = template.Must(template.New("index.html.tmpl").Parse(`
     <p class="js-discard-success"><strong>Plan discarded and unlocked!</strong></p>
   </section>
   <section>
-    {{ if .ApplyLock.GlobalApplyLockEnabled }}
     {{ if .ApplyLock.Locked }}
     <div class="twelve center columns">
       <h6><strong>Apply commands are disabled globally</strong></h6>
@@ -112,7 +110,6 @@ var IndexTemplate = template.Must(template.New("index.html.tmpl").Parse(`
       <h6><strong>Apply commands are enabled</strong></h6>
       <a class="button button-primary" id="applyLockPrompt">Disable Apply Commands</a>
     </div>
-    {{ end }}
     {{ end }}
   </section>
   <br>
