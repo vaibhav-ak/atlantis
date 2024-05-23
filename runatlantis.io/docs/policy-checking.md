@@ -171,7 +171,7 @@ workflows:
     policy_check:
       steps:
         - show
-        - run: conftest test $SHOWFILE *.tf --no-fail
+        - run: conftest test $SHOWFILE *.tf
 ```
 
 ### Quiet policy checks
