@@ -147,7 +147,7 @@ func TestRun(t *testing.T) {
 
 	policySetName1 := "policy1"
 	policySetPath1 := "/some/path"
-	projectPatterns := []string{".*testproj.*", ".*testproj-1.*", ".*testproj-2.*"}
+	projectPatterns := []string{".*dl/us1/data-eng.*", ".*dl/us1/data-eng-1.*", ".*dl/us1/data-eng-2.*", ".*testproj.*"}
 	localPolicySetPath1 := "/tmp/some/path"
 
 	policySetName2 := "policy2"
@@ -179,7 +179,7 @@ func TestRun(t *testing.T) {
 				policySet2,
 			},
 		},
-		ProjectName: "testproj",
+		ProjectName: "multi-region/production/dl/us1/data-eng/lakeformation-permissions",
 		Workspace:   "default",
 		Log:         log,
 	}
@@ -190,8 +190,8 @@ func TestRun(t *testing.T) {
 		expectedOutput := "Success"
 		expectedResult := `[{"PolicySetName":"policy1","PolicyOutput":"Success","Passed":true,"ReqApprovals":0,"CurApprovals":0},{"PolicySetName":"policy2","PolicyOutput":"Success","Passed":true,"ReqApprovals":0,"CurApprovals":0}]`
 
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
-		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
+		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn(localPolicySetPath1, nil)
 		When(mockResolver.Resolve(policySet2)).ThenReturn(localPolicySetPath2, nil)
@@ -202,6 +202,7 @@ func TestRun(t *testing.T) {
 		result, err := subject.Run(ctx, executablePath, envs, workdir, extraArgs)
 
 		fmt.Println(result)
+		fmt.Println(expectedResult)
 
 		Ok(t, errors.Unwrap(err))
 
