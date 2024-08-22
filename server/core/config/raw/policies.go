@@ -76,6 +76,7 @@ type PolicySet struct {
 	Owners             PolicyOwners `yaml:"owners,omitempty" json:"owners,omitempty"`
 	ApproveCount       int          `yaml:"approve_count,omitempty" json:"approve_count,omitempty"`
 	PreventSelfApprove bool         `yaml:"self_approve,omitempty" json:"prevent_self_approve,omitempty"`
+	ProjectPatterns    []string     `yaml:"project_patterns,omitempty" json:"project_patterns,omitempty"`
 }
 
 func (p PolicySet) Validate() error {
@@ -96,6 +97,7 @@ func (p PolicySet) ToValid() valid.PolicySet {
 	policySet.Source = p.Source
 	policySet.ApproveCount = p.ApproveCount
 	policySet.PreventSelfApprove = p.PreventSelfApprove
+	policySet.ProjectPatterns = p.ProjectPatterns
 	policySet.Owners = p.Owners.ToValid()
 
 	return policySet

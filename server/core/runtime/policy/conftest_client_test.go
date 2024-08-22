@@ -147,6 +147,7 @@ func TestRun(t *testing.T) {
 
 	policySetName1 := "policy1"
 	policySetPath1 := "/some/path"
+	projectPatterns := []string{".*testproj.*", ".*testproj-1.*", ".*testproj-2.*"}
 	localPolicySetPath1 := "/tmp/some/path"
 
 	policySetName2 := "policy2"
@@ -159,9 +160,10 @@ func TestRun(t *testing.T) {
 	workdir := t.TempDir()
 
 	policySet1 := valid.PolicySet{
-		Source: valid.LocalPolicySet,
-		Path:   policySetPath1,
-		Name:   policySetName1,
+		Source:          valid.LocalPolicySet,
+		Path:            policySetPath1,
+		Name:            policySetName1,
+		ProjectPatterns: projectPatterns,
 	}
 
 	policySet2 := valid.PolicySet{
