@@ -179,6 +179,13 @@ func (c *ConfTestExecutorWorkflow) Run(ctx command.ProjectContext, executablePat
 	for _, policySet := range ctx.PolicySets.PolicySets {
 		path, resolveErr := c.SourceResolver.Resolve(policySet)
 
+		// Does the project name match the folder patterns for the policy set? If not, skip this policy set.
+		// If no folder patterns are specified, the policy set is applicable to all projects.
+		if !isMatchingProjectPatterns(ctx.ProjectName, policySet.ProjectPatterns) {
+			ctx.Log.Debug("Policy set %s is not applicable to project %s", policySet.Name, ctx.ProjectName)
+			continue
+		}
+
 		// Let's not fail the whole step because of a single failure. Log and fail silently
 		if resolveErr != nil {
 			ctx.Log.Err("Error resolving policyset %s. err: %s", policySet.Name, resolveErr.Error())
@@ -249,6 +256,22 @@ func (c *ConfTestExecutorWorkflow) Run(ctx command.ProjectContext, executablePat
 
 func (c *ConfTestExecutorWorkflow) sanitizeOutput(inputFile string, output string) string {
 	return strings.Replace(output, inputFile, "<redacted plan file>", -1)
+}
+
+func isMatchingProjectPatterns(ProjectName string, ProjectPatterns []string) bool {
+	// If no project patterns are specified, then the policy set is applicable to all projects.
+	if len(ProjectPatterns) == 0 {
+		return true
+	}
+
+	// If the project name matches any of the project patterns, then the policy set is applicable to the project.
+	for _, pattern := range ProjectPatterns {
+		match, _ := regexp.MatchString(pattern, ProjectName)
+		if match {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *ConfTestExecutorWorkflow) EnsureExecutorVersion(log logging.SimpleLogging, v *version.Version) (string, error) {
