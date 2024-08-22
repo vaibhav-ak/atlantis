@@ -216,8 +216,8 @@ func TestRun(t *testing.T) {
 		expectedOutput := "Success"
 		expectedResult := `[{"PolicySetName":"policy1","PolicyOutput":"","Passed":true,"ReqApprovals":0,"CurApprovals":0},{"PolicySetName":"policy2","PolicyOutput":"","Passed":true,"ReqApprovals":0,"CurApprovals":0}]`
 
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
-		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
+		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn(localPolicySetPath1, nil)
 		When(mockResolver.Resolve(policySet2)).ThenReturn(localPolicySetPath2, nil)
@@ -241,8 +241,8 @@ func TestRun(t *testing.T) {
 		expectedOutput := "Success"
 		expectedResult := `[{"PolicySetName":"policy1","PolicyOutput":"Success","Passed":true,"ReqApprovals":0,"CurApprovals":0}]`
 
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
-		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
+		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn(localPolicySetPath1, nil)
 		When(mockResolver.Resolve(policySet2)).ThenReturn("", errors.New("err"))
@@ -262,7 +262,7 @@ func TestRun(t *testing.T) {
 		var extraArgs []string
 
 		expectedResult := ""
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn("", errors.New("err"))
 		When(mockResolver.Resolve(policySet2)).ThenReturn("", errors.New("err"))
@@ -280,12 +280,12 @@ func TestRun(t *testing.T) {
 	t.Run("error running one cmd", func(t *testing.T) {
 		var extraArgs []string
 
-		expectedOutputPolicy1 := fmt.Sprintf("FAIL - %s - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions", filepath.Join(workdir, "testproj-default.json"))
+		expectedOutputPolicy1 := fmt.Sprintf("FAIL - %s - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions", filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"))
 		expectedOutputPolicy2 := "Success"
 		expectedResult := `[{"PolicySetName":"policy1","PolicyOutput":"FAIL - <redacted plan file> - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions","Passed":false,"ReqApprovals":0,"CurApprovals":0},{"PolicySetName":"policy2","PolicyOutput":"Success","Passed":true,"ReqApprovals":0,"CurApprovals":0}]`
 
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
-		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
+		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn(localPolicySetPath1, nil)
 		When(mockResolver.Resolve(policySet2)).ThenReturn(localPolicySetPath2, nil)
@@ -303,11 +303,11 @@ func TestRun(t *testing.T) {
 	t.Run("error running both cmds", func(t *testing.T) {
 		var extraArgs []string
 
-		expectedOutput := fmt.Sprintf("FAIL - %s - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions", filepath.Join(workdir, "testproj-default.json"))
+		expectedOutput := fmt.Sprintf("FAIL - %s - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions", filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"))
 		expectedResult := `[{"PolicySetName":"policy1","PolicyOutput":"FAIL - <redacted plan file> - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions","Passed":false,"ReqApprovals":0,"CurApprovals":0},{"PolicySetName":"policy2","PolicyOutput":"FAIL - <redacted plan file> - failure\n1 tests, 0 passed, 0 warnings, 1 failure, 0 exceptions","Passed":false,"ReqApprovals":0,"CurApprovals":0}]`
 
-		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
-		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "testproj-default.json"), "--no-color"}
+		expectedArgsPolicy1 := []string{executablePath, "test", "-p", localPolicySetPath1, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
+		expectedArgsPolicy2 := []string{executablePath, "test", "-p", localPolicySetPath2, filepath.Join(workdir, "multi-region::production::dl::us1::data-eng::lakeformation-permissions-default.json"), "--no-color"}
 
 		When(mockResolver.Resolve(policySet1)).ThenReturn(localPolicySetPath1, nil)
 		When(mockResolver.Resolve(policySet2)).ThenReturn(localPolicySetPath2, nil)
